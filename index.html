@@ -94,7 +94,25 @@ h1,h2,p{margin:0}
 .viewer{position:fixed;inset:0;z-index:40;background:var(--bg);display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:14px;justify-items:center;padding-block:calc(14px + env(safe-area-inset-top,0px)) calc(14px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .viewer img{max-width:100%;max-height:100%;min-height:0;object-fit:contain;border:1px solid var(--line);border-radius:16px}
 .viewer .pill{height:46px;padding:0 28px}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@property --ar{syntax:"<number>";inherits:true;initial-value:.5625}
+@keyframes up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes fin{from{opacity:0}to{opacity:1}}
+@keyframes fout{to{opacity:0}}
+@keyframes pop{from{opacity:0;transform:scale(.94) translateY(8px)}to{opacity:1;transform:none}}
+:root{--ease:cubic-bezier(.22,.8,.24,1)}
+#welcome:not([hidden]),#app:not([hidden]){animation:fin .45s var(--ease)}
+[data-for]:not([hidden]){animation:up .42s var(--ease) both}
+.hd.pop{animation:up .38s var(--ease) both}
+.stage{transition:--ar .45s var(--ease)}
+.dot,.rat button,.pill,.ghost{transition:background-color .28s var(--ease),color .28s var(--ease),box-shadow .28s var(--ease),transform .2s var(--ease),opacity .2s}
+.dot:active,.rat button:active,.pill:active,.ghost:active{transform:scale(.92)}
+#ghost{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0}
+.tag{transition:opacity .2s}
+.sheet:not([hidden]) .sbk{animation:fin .25s var(--ease)}
+.sheet:not([hidden]) .spanel{animation:pop .34s var(--ease)}
+.sheet.out{animation:fout .2s var(--ease) forwards}
+.viewer:not([hidden]){animation:fin .3s var(--ease)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
@@ -130,7 +148,7 @@ h1,h2,p{margin:0}
     <button type="button" class="dot rb" id="bUp" aria-label="Agrandar" style="font-size:20px">+</button>
     <button type="button" class="dot rb" id="bDn" aria-label="Achicar" style="font-size:20px">−</button>
    </div>
-   <div class="stage dash" id="stage"><canvas id="cv" aria-label="Vista previa"></canvas><span class="rl" id="rl"></span></div>
+   <div class="stage dash" id="stage"><canvas id="cv" aria-label="Vista previa"></canvas><canvas id="ghost" aria-hidden="true"></canvas><span class="rl" id="rl"></span></div>
    <div class="col" data-for="3">
     <p class="lab">Fondo</p>
     <button type="button" class="dot rainbow" id="bBc" aria-label="Color de fondo"></button>
@@ -345,6 +363,15 @@ function draw(ctx,k,hl){
     y+=ln.h;
   });
 }
+var ghost=$('ghost'),gx=ghost.getContext('2d');
+function morph(fn){
+  ghost.width=cv.width;ghost.height=cv.height;
+  gx.drawImage(cv,0,0);
+  ghost.style.transition='none';ghost.style.opacity=1;
+  fn();
+  void ghost.offsetWidth;
+  ghost.style.transition='opacity .45s cubic-bezier(.22,.8,.24,1)';ghost.style.opacity=0;
+}
 function render(){
   cv.width=Math.round(W0*PV);cv.height=Math.round(H0*PV);
   draw(cx,PV,HL);
@@ -442,6 +469,11 @@ $('bDn').addEventListener('click',function(){bump(-1);});
 var SW=['#000000','#ffffff','#8e8e93','#ff3b30','#ff9500','#ffcc00','#34c759','#00c7be','#32ade6','#007aff','#5856d6','#af52de','#ff2d55','#a2845e','#ffd6e7','#c8f7dc','#1c1c1e','#fff4c2'];
 var TG={text:'Texto',bg:'Fondo',m0:'Mix · color 1',m1:'Mix · color 2',m2:'Mix · color 3'};
 var tgt=null;
+function closeSheet(){
+  var s=$('sheet');if(s.hidden)return;
+  s.classList.add('out');
+  setTimeout(function(){s.hidden=true;s.classList.remove('out');},200);
+}
 function normHex(v){
   v=String(v).trim().replace(/^#/,'');
   if(/^[0-9a-f]{3}$/i.test(v))v=v.split('').map(function(c){return c+c;}).join('');
@@ -470,10 +502,10 @@ function setTarget(t,h){
   }else{
     ensureMix();S.mix[+t.slice(1)]=h;if(S.auto)autoColor();
   }
-  render();paintAll();
+  morph(render);paintAll();
 }
 function openSheet(t){
-  if(t[0]==='m'&&S.bg!=='grad'){ensureMix();render();paintAll();}
+  if(t[0]==='m'&&S.bg!=='grad'){ensureMix();morph(render);paintAll();}
   tgt=t;
   $('sTitle').textContent=TG[t];
   syncSheet(curHex(t));
@@ -483,7 +515,7 @@ function syncSheet(h){$('sHex').value=h;$('sChip').style.background=h;$('sNat').
 var sw=$('sw');
 SW.forEach(function(c){
   var b=document.createElement('button');b.type='button';b.className='dot';b.style.background=c;b.setAttribute('aria-label',c);
-  b.addEventListener('click',function(){setTarget(tgt,c);syncSheet(c);$('sheet').hidden=true;});
+  b.addEventListener('click',function(){setTarget(tgt,c);syncSheet(c);closeSheet();});
   sw.appendChild(b);
 });
 $('sHex').addEventListener('input',function(e){
@@ -493,20 +525,20 @@ $('sHex').addEventListener('input',function(e){
 $('sNat').addEventListener('input',function(e){
   var h=e.target.value.toLowerCase();$('sHex').value=h;$('sChip').style.background=h;setTarget(tgt,h);
 });
-$('sOk').addEventListener('click',function(){$('sheet').hidden=true;});
-$('sbk').addEventListener('click',function(){$('sheet').hidden=true;});
+$('sOk').addEventListener('click',function(){closeSheet();});
+$('sbk').addEventListener('click',function(){closeSheet();});
 $('bTc').addEventListener('click',function(){openSheet('text');});
 $('bBc').addEventListener('click',function(){openSheet('bg');});
 ['m0','m1','m2'].forEach(function(id){$(id).addEventListener('click',function(){openSheet(id);});});
 $('bMix').addEventListener('click',function(){
   if(S.bg!=='grad'){S.mix=randMix();S.bg='grad';if(S.auto)autoColor();}
   S.seed=Math.floor(Math.random()*1e9);
-  render();paintAll();
+  morph(render);paintAll();
 });
 $('bDice').addEventListener('click',function(){
   S.mix=randMix();S.seed=Math.floor(Math.random()*1e9);S.bg='grad';
   if(S.auto)autoColor();
-  render();paintAll();
+  morph(render);paintAll();
 });
 
 /* ---------- Foto de fondo ---------- */
@@ -521,7 +553,7 @@ $('fImg').addEventListener('change',function(e){
       c.width=Math.max(1,Math.round(im.width*s));c.height=Math.max(1,Math.round(im.height*s));
       c.getContext('2d').drawImage(im,0,0,c.width,c.height);
       S.img=c;S.bg='img';if(S.auto)autoColor();
-      render();paintAll();
+      morph(render);paintAll();
     };
     im.src=rd.result;
   };
@@ -608,7 +640,7 @@ function go(n){
   $('welcome').hidden=n!==0;
   $('app').hidden=n===0;
   $('app').dataset.step=n;
-  if(n>0){$('num').textContent=n;$('ttl').textContent=TITLES[n];}
+  if(n>0){$('num').textContent=n;$('ttl').textContent=TITLES[n];var hd=document.querySelector('.hd');hd.classList.remove('pop');void hd.offsetWidth;hd.classList.add('pop');}
   Array.prototype.forEach.call(document.querySelectorAll('[data-for]'),function(e){
     e.hidden=e.dataset.for.split(' ').indexOf(String(n))<0;
   });
@@ -626,6 +658,8 @@ $('bNext').addEventListener('click',function(){
 });
 $('bNew').addEventListener('click',function(){
   S.chars=[];S.ov=[];S.selA=S.selB=0;txt.value='';
+  S.bg='black';S.solid='#000000';S.img=null;S.color='#ffffff';S.auto=true;S.tPick=false;
+  S.size=91;S.bold=true;S.italic=false;S.seed=11;S.mix=['#ff5fa2','#6f9bff','#ff9a4a'];
   go(2);txt.focus();
 });
 
@@ -659,7 +693,7 @@ var TAGS=[
 ];
 var tagI=Math.floor(Math.random()*TAGS.length);
 function paintTag(){$('tag').textContent=TAGS[tagI];}
-$('tag').addEventListener('click',function(){tagI=(tagI+1)%TAGS.length;paintTag();});
+$('tag').addEventListener('click',function(){var t=$('tag');t.style.opacity=0;setTimeout(function(){tagI=(tagI+1)%TAGS.length;paintTag();t.style.opacity=1;},200);});
 
 /* ---------- Exportar ---------- */
 function make(){
@@ -681,7 +715,7 @@ $('bSave').addEventListener('click',async function(){
   show(c);say('');
 });
 $('vclose').addEventListener('click',function(){$('viewer').hidden=true;});
-document.addEventListener('keydown',function(e){if(e.key==='Escape'){$('viewer').hidden=true;$('sheet').hidden=true;}});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){$('viewer').hidden=true;closeSheet();}});
 
 /* ---------- Inicio ---------- */
 txt.value=S.chars.join('');
