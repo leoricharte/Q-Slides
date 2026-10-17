@@ -39,10 +39,16 @@ h1,h2,p{margin:0}
 .num{width:30px;height:30px;border:2px solid var(--fg);border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:15px}
 .ttl{font-size:20px;font-weight:700;letter-spacing:-.01em;text-align:center}
 .main{flex:1;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+.tools{display:flex;gap:10px;justify-content:center;align-items:center}
+.tools[hidden]{display:none}
+.vr{width:1px;height:24px;background:var(--dash);flex:none;margin:0 2px}
+#bBoxC{transition:filter .3s var(--ease),opacity .3s var(--ease),background-color .28s var(--ease),transform .2s var(--ease)}
+#bBoxC.off{filter:saturate(0);opacity:.55}
 .mid{display:flex;justify-content:center;align-items:center;gap:10px;width:100%}
 .stage{--ar:.5625;position:relative;flex:none;width:min(var(--mw,100%),calc(var(--ph)*var(--ar)));aspect-ratio:var(--ar);border-radius:16px;overflow:hidden}
 .stage::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 1px var(--line);pointer-events:none}
 .stage canvas{display:block;width:100%;height:100%}
+.stage.alpha,.viewer img.alpha{background-color:#9c9c9c;background-image:conic-gradient(#b8b8b8 25%,#9c9c9c 0 50%,#b8b8b8 0 75%,#9c9c9c 0);background-size:18px 18px}
 #app[data-step="3"] .stage canvas{touch-action:none}
 .stage.dash{overflow:visible;border:1.5px dashed var(--dash)}
 .stage.dash::after{display:none}
@@ -53,6 +59,22 @@ h1,h2,p{margin:0}
 #app[data-step="2"]{--ph:min(42dvh,400px)}
 #app[data-step="3"]{--ph:min(44dvh,400px);--mw:calc(100% - 118px)}
 #app[data-step="4"]{--ph:min(46dvh,460px)}
+/* Formatos horizontales: controles arriba y abajo, herramientas al costado */
+#app.wide[data-step="3"]{--mw:100%;--ph:min(32dvh,300px)}
+#app.wide[data-step="3"] .main{display:grid;grid-template-columns:minmax(0,1fr) 44px;grid-template-areas:"t t" "s k" "f f" "u u";justify-items:center;align-items:center;align-content:center;column-gap:10px;row-gap:16px}
+#app.wide[data-step="3"] .mid{display:contents}
+#app.wide[data-step="3"] #cT{grid-area:t}
+#app.wide[data-step="3"] .stage{grid-area:s}
+#app.wide[data-step="3"] .tools{grid-area:k;flex-direction:column;gap:7px;width:44px}
+#app.wide[data-step="3"] #cF{grid-area:f}
+#app.wide[data-step="3"] .under{grid-area:u}
+#app.wide[data-step="3"] #cT,#app.wide[data-step="3"] #cF{flex-direction:row;flex-wrap:wrap;justify-content:center;width:auto;max-width:100%;gap:7px}
+#app.wide[data-step="3"] #cT .col,#app.wide[data-step="3"] #cF .col{flex-direction:row;gap:6px}
+#app.wide[data-step="3"] #cT .dot,#app.wide[data-step="3"] #cF .dot{width:30px;height:30px}
+#app.wide[data-step="3"] #cT .hr,#app.wide[data-step="3"] #cF .hr{width:1px;height:22px}
+#app.wide[data-step="3"] .vlab{display:none}
+#app.wide[data-step="3"] .vr{width:24px;height:1px;margin:2px 0}
+#app.wide[data-step="3"] #boxLab{writing-mode:vertical-rl;text-orientation:upright;font-size:8px;letter-spacing:.08em}
 .under{width:100%;display:grid;gap:12px;justify-items:center}
 #txt{width:100%;max-width:340px;min-height:64px;resize:none;background:var(--ctl);color:var(--fg);border:0;border-radius:12px;padding:12px 14px;font:16px/1.3 var(--ui);text-align:center}
 #txt:focus{outline:2px solid var(--fg);outline-offset:2px}
@@ -179,8 +201,15 @@ button.by:active{opacity:.55;transform:scale(.97)}
 <main class="screen" id="app" data-step="1" hidden>
  <header class="hd"><span class="num" id="num">1</span><h2 class="ttl" id="ttl"></h2></header>
  <div class="main">
+  <div class="tools" data-for="3" id="tools">
+   <button type="button" class="dot rb" id="bAlpha" aria-pressed="false" aria-label="Fondo transparente"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><clipPath id="ck"><rect x="4" y="4" width="16" height="16" rx="3"/></clipPath></defs><rect x="4" y="4" width="16" height="16" rx="3"/><g clip-path="url(#ck)" fill="currentColor" stroke="none"><rect x="12" y="4" width="8" height="8"/><rect x="4" y="12" width="8" height="8"/></g></svg></button>
+   <i class="vr" aria-hidden="true"></i>
+   <span class="lab" id="boxLab">Marco</span>
+   <button type="button" class="dot rb" id="bBox" aria-pressed="false" aria-label="Cuadro de fondo del texto"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M8.5 16.5L12 7.5l3.5 9M9.8 13.5h4.4"/></svg></button>
+   <button type="button" class="dot rainbow" id="bBoxC" aria-label="Color del cuadro de fondo"></button>
+  </div>
   <div class="mid">
-   <div class="col" data-for="3">
+   <div class="col" data-for="3" id="cT">
     <p class="lab">Texto</p>
     <button type="button" class="dot rainbow" id="bTc" aria-label="Color del texto"></button>
     <i class="hr"></i>
@@ -191,11 +220,11 @@ button.by:active{opacity:.55;transform:scale(.97)}
      <button type="button" class="dot rb" data-k="s" aria-pressed="false" aria-label="Pequeño" style="font-size:10px">Aa</button>
     </div>
     <i class="hr"></i>
-    <button type="button" class="dot rb" id="bUp" aria-label="Agrandar" style="font-size:20px">+</button>
-    <button type="button" class="dot rb" id="bDn" aria-label="Achicar" style="font-size:20px">−</button>
+    <button type="button" class="dot rb" id="bUp" aria-label="Agrandar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+    <button type="button" class="dot rb" id="bDn" aria-label="Achicar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg></button>
    </div>
    <div class="stage dash" id="stage"><canvas id="cv" aria-label="Vista previa"></canvas><canvas id="ghost" aria-hidden="true"></canvas><span class="rl" id="rl"></span></div>
-   <div class="col" data-for="3">
+   <div class="col" data-for="3" id="cF">
     <p class="lab">Fondo</p>
     <button type="button" class="dot rainbow" id="bBc" aria-label="Color de fondo"></button>
     <i class="hr"></i>
@@ -246,7 +275,7 @@ button.by:active{opacity:.55;transform:scale(.97)}
    <button type="button" class="pill go" id="bNext" data-for="1 2 3" aria-label="Siguiente"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h18M14 5l7 7-7 7"/></svg></button>
    <button type="button" class="pill go" id="bSave" data-for="4" aria-label="Descargar imagen"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v10M8 10l4 4 4-4M5 15v4h14v-4"/></svg></button>
   </div>
-  <div class="r"><button type="button" class="ghost" id="bNew" data-for="4" aria-label="Empezar una nueva"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8zM14 3v5h5M12 11v6M9 14h6"/></svg></button></div>
+  <div class="r"><button type="button" class="ghost" id="bSkip" data-for="1 2 3" aria-label="Ir al paso final"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12.5l6 6L20.5 6"/></svg></button><button type="button" class="ghost" id="bNew" data-for="4" aria-label="Empezar una nueva"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8zM14 3v5h5M12 11v6M9 14h6"/></svg></button></div>
  </nav>
 </main>
 
@@ -273,7 +302,7 @@ button.by:active{opacity:.55;transform:scale(.97)}
 <script>
 (function(){
 var SHORT=1080,W0=608,H0=1080,PV=0.5;
-var S={chars:Array.from('Hola, mundo.'),ov:[],bg:'black',color:'#ffffff',auto:true,bold:true,italic:false,size:91,lh:1.0,ls:-2,align:'center',pos:'middle',mar:201,selA:0,selB:0,seed:11,tex:20,solid:'#000000',mix:['#ff5fa2','#6f9bff','#ff9a4a'],rw:9,rh:16,tPick:false,img:null,res:1};
+var S={chars:Array.from('Hola, mundo.'),ov:[],bg:'black',color:'#ffffff',auto:true,bold:true,italic:false,size:91,lh:1.0,ls:-2,align:'center',pos:'middle',mar:201,selA:0,selB:0,seed:11,tex:20,solid:'#000000',mix:['#ff5fa2','#6f9bff','#ff9a4a'],rw:9,rh:16,tPick:false,img:null,res:1,box:false,boxc:'#000000',boxPick:false};
 S.ov=S.chars.map(function(){return null;});
 var $=function(id){return document.getElementById(id);};
 var cv=$('cv'),cx=cv.getContext('2d'),stage=$('stage'),txt=$('txt');
@@ -290,6 +319,7 @@ function setRatio(w,h){
   if(r>=1){H0=SHORT;W0=Math.round(SHORT*r);}else{W0=SHORT;H0=Math.round(SHORT/r);}
   PV=Math.min(1,900/Math.max(W0,H0));
   stage.style.setProperty('--ar',W0/H0);
+  $('app').classList.toggle('wide',W0>H0);
 }
 
 /* ---------- Texto ---------- */
@@ -350,7 +380,7 @@ function randMix(){
 }
 function avgMix(){return mixHex(mixHex(S.mix[0],S.mix[1]),S.mix[2]);}
 function autoColor(){
-  if(S.bg==='img'){S.color='#ffffff';return;}
+  if(S.bg==='img'||S.bg==='none'){S.color='#ffffff';return;}
   if(S.bg==='grad'){S.color=lumText(avgMix());return;}
   S.color=lumText(S.bg==='solid'?S.solid:'#000000');
 }
@@ -387,6 +417,7 @@ function grad(ctx){
   }
 }
 function paintBg(ctx){
+  if(S.bg==='none')return;
   if(S.bg==='grad')return grad(ctx);
   if(S.bg==='img'&&S.img){
     var iw=S.img.width,ih=S.img.height,s=Math.max(W0/iw,H0/ih),w=iw*s,h=ih*s;
@@ -396,6 +427,11 @@ function paintBg(ctx){
 }
 
 /* ---------- Dibujo ---------- */
+function boxHex(){return S.boxPick?S.boxc:(lumText(S.color)==='#000000'?'#ffffff':'#000000');}
+function rr(ctx,x,y,w,h,r){
+  r=Math.min(r,w/2,h/2);
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();ctx.fill();
+}
 function draw(ctx,k,hl){
   ctx.setTransform(k,0,0,k,0,0);
   paintBg(ctx);
@@ -407,6 +443,10 @@ function draw(ctx,k,hl){
   b.L.forEach(function(ln){
     var x=S.align==='left'?S.mar:S.align==='right'?W0-S.mar-ln.w:(W0-ln.w)/2;
     var base=y+ln.h/2+ln.ms*0.35,row={y0:y,y1:y+ln.h,it:[]};
+    if(S.box&&ln.items.length&&ln.w>0){
+      var bp=ln.ms*0.2;ctx.fillStyle=boxHex();
+      rr(ctx,x-bp,y-ln.ms*0.04,ln.w+bp*2,ln.h+ln.ms*0.08,ln.ms*0.2);
+    }
     ln.items.forEach(function(it){
       if(hl){
         row.it.push({idx:it.idx,x0:x,x1:x+it.w});
@@ -523,7 +563,7 @@ $('bDn').addEventListener('click',function(){bump(-1);});
 
 /* ---------- Paleta ---------- */
 var SW=['#000000','#ffffff','#8e8e93','#ff3b30','#ff9500','#ffcc00','#34c759','#00c7be','#32ade6','#007aff','#5856d6','#af52de','#ff2d55','#a2845e','#ffd6e7','#c8f7dc','#1c1c1e','#fff4c2'];
-var TG={text:'Texto',bg:'Fondo',m0:'Mix · color 1',m1:'Mix · color 2',m2:'Mix · color 3'};
+var TG={box:'Cuadro de fondo',text:'Texto',bg:'Fondo',m0:'Mix · color 1',m1:'Mix · color 2',m2:'Mix · color 3'};
 var tgt=null;
 function closeSheet(){
   var s=$('sheet');if(s.hidden)return;
@@ -536,6 +576,7 @@ function normHex(v){
   return /^[0-9a-f]{6}$/i.test(v)?'#'+v.toLowerCase():null;
 }
 function curHex(t){
+  if(t==='box')return boxHex();
   if(t==='text')return ((S.ov[range()[0]]||{}).color||S.color).toLowerCase();
   if(t==='bg')return S.bg==='solid'?S.solid:'#000000';
   return S.mix[+t.slice(1)];
@@ -553,6 +594,8 @@ function setTarget(t,h){
       S.ov=S.ov.map(function(o){if(!o)return o;var n=Object.assign({},o);delete n.color;return Object.keys(n).length?n:null;});
     }
     S.auto=false;S.tPick=true;
+  }else if(t==='box'){
+    S.boxc=h;S.boxPick=true;S.box=true;
   }else if(t==='bg'){
     S.bg='solid';S.solid=h;if(S.auto)autoColor();
   }else{
@@ -585,6 +628,8 @@ $('sOk').addEventListener('click',function(){closeSheet();});
 $('sbk').addEventListener('click',function(){closeSheet();});
 $('bTc').addEventListener('click',function(){openSheet('text');});
 $('bBc').addEventListener('click',function(){openSheet('bg');});
+$('bBoxC').addEventListener('click',function(){openSheet('box');});
+$('bBox').addEventListener('click',function(){S.box=!S.box;morph(render);paintAll();});
 ['m0','m1','m2'].forEach(function(id){$(id).addEventListener('click',function(){openSheet(id);});});
 $('bMix').addEventListener('click',function(){
   if(S.bg!=='grad'){S.mix=randMix();S.bg='grad';if(S.auto)autoColor();}
@@ -593,6 +638,13 @@ $('bMix').addEventListener('click',function(){
 });
 $('bDice').addEventListener('click',function(){
   S.mix=randMix();S.seed=Math.floor(Math.random()*1e9);S.bg='grad';
+  if(S.auto)autoColor();
+  morph(render);paintAll();
+});
+
+/* ---------- Fondo transparente ---------- */
+$('bAlpha').addEventListener('click',function(){
+  S.bg=S.bg==='none'?'black':'none';
   if(S.auto)autoColor();
   morph(render);paintAll();
 });
@@ -638,6 +690,10 @@ function paintAll(){
   db.style.background=on?'linear-gradient(135deg,'+S.mix.join(',')+')':'';
   db.style.color=on?'#ffffff':'';
   $('bImg').setAttribute('aria-pressed',String(S.bg==='img'));
+  $('bAlpha').setAttribute('aria-pressed',String(S.bg==='none'));
+  $('bBox').setAttribute('aria-pressed',String(S.box));
+  var xc=$('bBoxC');xc.classList.toggle('rainbow',!S.boxPick);xc.classList.toggle('off',!S.box);xc.style.background=S.boxPick?S.boxc:'';
+  $('stage').classList.toggle('alpha',S.bg==='none');
 }
 
 /* ---------- Relación de aspecto ---------- */
@@ -724,9 +780,11 @@ $('bNext').addEventListener('click',function(){
   go(step+1);
   if(step===2){txt.value=S.chars.join('');txt.focus();if(txt.value==='Hola, mundo.')txt.select();}
 });
+$('bSkip').addEventListener('click',function(){go(4);});
 $('bNew').addEventListener('click',function(){
   S.chars=[];S.ov=[];S.selA=S.selB=0;txt.value='';
   S.bg='black';S.solid='#000000';S.img=null;S.color='#ffffff';S.auto=true;S.tPick=false;
+  S.box=false;S.boxc='#000000';S.boxPick=false;
   S.size=91;S.bold=true;S.italic=false;S.seed=11;S.mix=['#ff5fa2','#6f9bff','#ff9a4a'];
   go(2);txt.focus();
 });
@@ -796,7 +854,7 @@ function make(){
   var k=S.res;c.width=Math.round(W0*k);c.height=Math.round(H0*k);draw(c.getContext('2d'),k,false);
   return c;
 }
-function show(c){$('vimg').src=c.toDataURL('image/png');$('viewer').hidden=false;$('vclose').focus();}
+function show(c){$('vimg').classList.toggle('alpha',S.bg==='none');$('vimg').src=c.toDataURL('image/png');$('viewer').hidden=false;$('vclose').focus();}
 $('bSave').addEventListener('click',async function(){
   say('Preparando imagen…');
   var c=make();
